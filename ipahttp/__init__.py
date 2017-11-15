@@ -239,9 +239,9 @@ class ipa(object):
 
         return results
 
-    def hostgroup_find(self, hostgroup=None, sizelimit=40000):
+    def hostgroup_find(self, hostgroup=None, in_hostgroup=None, sizelimit=40000):
         m = {'item': [hostgroup], 'method': 'hostgroup_find', 'params':
-             {'all': True, 'sizelimit': sizelimit}}
+             {'all': True, 'sizelimit': sizelimit, 'cn': hostgroup, 'in_hostgroup':in_hostgroup}}
         results = self.makeReq(m)
 
         return results
