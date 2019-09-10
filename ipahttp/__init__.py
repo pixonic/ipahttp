@@ -15,12 +15,11 @@
 import requests
 import json
 import logging
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-
+import urllib3
 
 class ipa(object):
 
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     def __init__(self, server, sslverify=False):
         self.server = server
         self.sslverify = sslverify
