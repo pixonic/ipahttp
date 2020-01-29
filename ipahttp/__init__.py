@@ -17,9 +17,11 @@ import json
 import logging
 import urllib3
 
+
 class ipa(object):
 
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
     def __init__(self, server, sslverify=False):
         self.server = server
         self.sslverify = sslverify
@@ -33,7 +35,17 @@ class ipa(object):
                   'application/x-www-form-urlencoded', 'Accept': 'text/plain'}
         login = {'user': user, 'password': password}
         rv = self.session.post(ipaurl, headers=header, data=login,
-                               verify=self.sslverify)
+                               verify=self.sslverify, allow_redirects=False)
+        while rv.status_code == 301:
+            host = urllib3.util.parse_url(rv.headers['Location']).host
+            ipaurl = 'https://{0}/ipa/session/login_password'.format(host)
+            header = {'referer': ipaurl, 'Content-Type':
+                      'application/x-www-form-urlencoded',
+                      'Accept': 'text/plain'}
+            rv = self.session.post(rv.headers['Location'],
+                                   headers=header, data=login,
+                                   verify=self.sslverify,
+                                   allow_redirects=False)
         if rv.status_code != 200:
             self.log.warning('Failed to log {0} in to {1}'.format(
                 user,
@@ -57,13 +69,26 @@ class ipa(object):
                 [pdict['item'], pdict['params']]}
 
         self.log.debug('Making {0} request to {1}'.format(pdict['method'],
-                        session_url))
+                       session_url))
 
         request = self.session.post(
                 session_url, headers=header,
                 data=json.dumps(data),
-                verify=self.sslverify
+                verify=self.sslverify,
+                allow_redirects=False
         )
+
+        while request.status_code == 301:
+            host = urllib3.util.parse_url(request.headers['Location']).host
+            ipaurl = 'https://{0}/ipa'.format(host)
+            session_url = '{0}/session/json'.format(ipaurl)
+            header = {'referer': ipaurl, 'Content-Type': 'application/json',
+                      'Accept': 'application/json'}
+
+            request = self.session.post(session_url,
+                                        headers=header, data=json.dumps(data),
+                                        verify=self.sslverify,
+                                        allow_redirects=False)
         results = request.json()
 
         return results
@@ -80,8 +105,8 @@ class ipa(object):
              'params': {
                  'all': True,
                  'description': description
+                  }
              }
-        }
         if gidnumber is not None:
             m['params']['gidnumber'] = gidnumber
         results = self.makeReq(m)
@@ -171,9 +196,10 @@ class ipa(object):
 
         return results
 
-    def host_find(self, hostname=None,asd="asd", in_hg=None, sizelimit=40000):
+    def host_find(self, hostname=None, asd="asd", in_hg=None, sizelimit=40000):
         m = {'method': 'host_find', 'item': [hostname], 'params':
-             {'fqdn':hostname,'all': True, 'in_hostgroup': in_hg, 'sizelimit': sizelimit}}
+             {'fqdn': hostname, 'all': True,
+             'in_hostgroup': in_hg, 'sizelimit': sizelimit}}
         results = self.makeReq(m)
 
         return results
@@ -208,7 +234,8 @@ class ipa(object):
 
         return results
 
-    def hostgroup_add_member(self, hostgroup, memb_hostname=None, memb_hostgroup=None):
+    def hostgroup_add_member(self, hostgroup,
+                             memb_hostname=None, memb_hostgroup=None):
         if memb_hostgroup:
             if type(memb_hostgroup) != list:
                 hostgroups = [memb_hostgroup]
@@ -238,9 +265,11 @@ class ipa(object):
 
         return results
 
-    def hostgroup_find(self, hostgroup=None, in_hostgroup=None, sizelimit=40000):
+    def hostgroup_find(self, hostgroup=None,
+                       in_hostgroup=None, sizelimit=40000):
         m = {'item': [hostgroup], 'method': 'hostgroup_find', 'params':
-             {'all': True, 'sizelimit': sizelimit, 'cn': hostgroup, 'in_hostgroup':in_hostgroup}}
+             {'all': True, 'sizelimit': sizelimit, 'cn': hostgroup,
+             'in_hostgroup': in_hostgroup}}
         results = self.makeReq(m)
 
         return results
@@ -331,7 +360,7 @@ class ipa(object):
         params = {'all': True,
                   'no_members': False,
                   'sizelimit': sizelimit,
-        }
+                  }
         params.update(attrs)
         m = {'item': [user], 'method': 'stageuser_find', 'params': params}
         results = self.makeReq(m)
@@ -432,7 +461,8 @@ class ipa(object):
 
         return results
 
-    def automember_add_condition(self, name, key, type, description='', inclusive_regex='', exclusive_regex=''):
+    def automember_add_condition(self, name, key, type, description='',
+                                 inclusive_regex='', exclusive_regex=''):
         m = {
             'method': 'automember_add_condition',
             'item': [name],
@@ -461,12 +491,16 @@ class ipa(object):
 
     def dnszone_find(self, idnsname):
         m = {'method': 'dnszone_find', 'item': [idnsname], 'params':
-             {'idnsname':idnsname, 'all': True}}
+             {'idnsname': idnsname, 'all': True}}
         results = self.makeReq(m)
 
         return results
 
-    def dnszone_add(self, idnsname,idnssoarname="hostmaster",idnssoarefresh=3600,idnssoaretry=900,idnssoaexpire=1209600,idnssoaminimum=3600,skip_overlap_check=False,force=True,skip_nameserver_check=False):
+    def dnszone_add(self, idnsname, idnssoarname="hostmaster",
+                    idnssoarefresh=3600, idnssoaretry=900,
+                    idnssoaexpire=1209600, idnssoaminimum=3600,
+                    skip_overlap_check=False, force=True,
+                    skip_nameserver_check=False):
         m = {
             'item': [idnsname],
             'method': 'dnszone_add',
@@ -480,13 +514,14 @@ class ipa(object):
                 'idnssoaminimum': idnssoaminimum,
                 'skip_overlap_check': skip_overlap_check,
                 'skip_nameserver_check': skip_nameserver_check,
-		'idnsallowdynupdate': True
+                'idnsallowdynupdate': True
             }
         }
         results = self.makeReq(m)
 
         return results
-    def dnsrecord_show(self, dnszoneidnsname,idnsname):
+
+    def dnsrecord_show(self, dnszoneidnsname, idnsname):
         m = {
             'item': [],
             'method': 'dnsrecord_show',
@@ -499,6 +534,7 @@ class ipa(object):
         results = self.makeReq(m)
 
         return results
+
     def dnsrecord_find(self, dnszoneidnsname, idsname, pkey_only=False):
         m = {
             'item': [],
@@ -514,7 +550,7 @@ class ipa(object):
 
         return results
 
-    def dnsrecord_add(self, dnszoneidnsname,idnsname,arecord=None):
+    def dnsrecord_add(self, dnszoneidnsname, idnsname, arecord=None):
         m = {
             'item': [],
             'method': 'dnsrecord_add',
@@ -533,7 +569,7 @@ class ipa(object):
         m = {
             'item': [],
             'method': 'dnsrecord_mod',
-            'params':{
+            'params': {
                 'all': True,
                 'dnszoneidnsname': dnszoneidnsname,
                 'idnsname': idnsname,
