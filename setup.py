@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='ipahttp',
-      version='0.3',
+      version='0.3.1',
       description='module for http API IPA',
       url='https://github.com/pixonic/ipahttp',
       author='Pixonic Team',

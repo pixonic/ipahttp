@@ -482,12 +482,34 @@ class ipa(object):
 
         return results
 
+    def automember_del_condition(self, name, key, type, description='',
+                                 inclusive_regex='', exclusive_regex=''):
+        m = {
+            'method': 'automember_del_condition',
+            'item': [name],
+            'params': {
+                'key': key,
+                'type': type,
+                'all': True,
+                'raw': False,
+                'version': '2.164'
+            }
+        }
+        if inclusive_regex:
+            m['params']['automemberinclusiveregex'] = inclusive_regex
+        if exclusive_regex:
+            m['params']['automemberexclusiveregex'] = exclusive_regex
+        results = self.makeReq(m)
+
+        return results
+
     def automember_find(self, automember=None, am_type=None):
         m = {'method': 'automember_find', 'item': [automember], 'params':
              {'all': True, 'type': am_type}}
         results = self.makeReq(m)
 
         return results
+
 
     def dnszone_find(self, idnsname):
         m = {'method': 'dnszone_find', 'item': [idnsname], 'params':
