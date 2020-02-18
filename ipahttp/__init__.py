@@ -482,10 +482,10 @@ class ipa(object):
 
         return results
 
-    def automember_del_condition(self, name, key, type, description='',
+    def automember_remove_condition(self, name, key, type, description='',
                                  inclusive_regex='', exclusive_regex=''):
         m = {
-            'method': 'automember_del_condition',
+            'method': 'automember_remove_condition',
             'item': [name],
             'params': {
                 'key': key,
