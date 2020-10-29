@@ -196,10 +196,10 @@ class ipa(object):
 
         return results
 
-    def host_find(self, hostname=None, asd="asd", in_hg=None, sizelimit=40000):
+    def host_find(self, hostname=None, asd="asd", in_hg=None, print_all_attr=True, sizelimit=40000):
         m = {'method': 'host_find', 'item': [hostname], 'params':
-             {'fqdn': hostname, 'all': True,
-             'in_hostgroup': in_hg, 'sizelimit': sizelimit}}
+             {'fqdn': hostname, 'all': print_all_attr,'in_hostgroup': in_hg, 'sizelimit': sizelimit, "no_members": False}
+            }
         results = self.makeReq(m)
 
         return results
