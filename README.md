@@ -1,3 +1,5 @@
+# FreeIPA integration lib
+
 ~~~~{.python}
 import ipahttp
 
@@ -6,5 +8,5 @@ user = 'user'
 passwd = 'passwd'
 ipa = ipahttp.ipa(host)
 ipa.login(user, passwd)
-print(ipa.dnsrecord_show(dns_zone,dns_name))
+print(ipa.dnsrecord_show(dns_zone, dns_name))
 ~~~~
